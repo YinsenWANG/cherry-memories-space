@@ -33,7 +33,53 @@ jobs:
           xcodebuild -version
           swift --version
       - run: pnpm install --frozen-lockfile
-      - run: pnpm build:mac:arm64
+      - name: Build application
+        run: pnpm exec dotenv pnpm run build
+      - name: Package and sign application
+        shell: bash
+        run: |
+          pnpm exec electron-builder --mac --arm64 --dir
+          shopt -s nullglob
+          apps=(dist/mac-arm64/*.app)
+          if [ "${#apps[@]}" -ne 1 ]; then
+            echo "Expected exactly one macOS app, found ${#apps[@]}" >&2
+            exit 1
+          fi
+          codesign --force --deep --sign - "${apps[0]}"
+          codesign --verify --deep --strict --verbose=2 "${apps[0]}"
+          pnpm exec electron-builder --mac --arm64 --prepackaged "${apps[0]}"
+      - name: Verify app and DMG signatures
+        shell: bash
+        run: |
+          verify_app() {
+            local signature
+            codesign --verify --deep --strict --verbose=2 "$1"
+            signature=$(codesign -dv "$1" 2>&1)
+            printf '%s\n' "$signature"
+            if grep -q 'linker-signed' <<< "$signature" || ! grep -q 'Signature=adhoc' <<< "$signature"; then
+              echo "App does not have a complete ad-hoc bundle signature" >&2
+              exit 1
+            fi
+          }
+
+          shopt -s nullglob
+          apps=(dist/mac-arm64/*.app)
+          dmgs=(dist/*.dmg)
+          zips=(dist/*.zip)
+          if [ "${#apps[@]}" -ne 1 ] || [ "${#dmgs[@]}" -ne 1 ] || [ "${#zips[@]}" -ne 1 ]; then
+            echo "Expected exactly one app, DMG, and ZIP" >&2
+            exit 1
+          fi
+          verify_app "${apps[0]}"
+          mount_dir=$(mktemp -d "${RUNNER_TEMP}/cherry-dmg-XXXXXX")
+          trap 'hdiutil detach "$mount_dir" -quiet || true; rmdir "$mount_dir" || true' EXIT
+          hdiutil attach "${dmgs[0]}" -nobrowse -readonly -quiet -mountpoint "$mount_dir"
+          mounted_apps=("$mount_dir"/*.app)
+          if [ "${#mounted_apps[@]}" -ne 1 ]; then
+            echo "Expected exactly one app in the DMG" >&2
+            exit 1
+          fi
+          verify_app "${mounted_apps[0]}"
       - name: Verify artifacts and print sizes
         run: |
           ls -l dist/*.dmg dist/*.zip || ls -l dist/*.dmg
