@@ -34,8 +34,9 @@ jobs:
           swift --version
       - run: pnpm install --frozen-lockfile
       - run: pnpm build:mac:arm64
-      - name: Verify DMG exists
-        run: ls dist/*.dmg
+      - name: Verify artifacts and print sizes
+        run: |
+          ls -l dist/*.dmg dist/*.zip || ls -l dist/*.dmg
       - uses: actions/upload-artifact@v4
         with:
           name: mac-arm64-${{ github.ref_name }}
