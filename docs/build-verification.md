@@ -32,3 +32,18 @@ Paths are relative to the clone; byte sizes are from `stat -f '%z %N'` after the
 ## Not verified
 
 The application was not launched or exercised through its GUI, and the DMG and ZIP were not installed or opened. `codesign -dv` reports an ad hoc signature and no team identifier; Developer ID signing, notarization, and Gatekeeper acceptance were not verified. The targeted tests do not establish end-to-end shared-memory functionality or cover the full suite.
+
+## Local launch smoke test (maintainer, 2026-11-10 10:19 CST)
+
+After the build above, the packaged app was launched once from
+`dist/mac-arm64/Cherry Studio.app` (`open`) and observed for ~12 s:
+
+- 6 processes came up (main process + GPU/renderer/utility helpers), main PID alive, no crash loop.
+- The app was then terminated; 0 residual processes remained.
+- Note: this build shares the default Electron user-data directory
+  (`~/Library/Application Support/CherryStudio`) with an installed Cherry Studio.
+  When trying a build side by side, point it at a separate user-data directory to avoid
+  sharing settings and local databases.
+
+Still not verified: installing from the DMG/ZIP, notarization/Gatekeeper, and end-to-end
+shared-memory behaviour in the GUI.
