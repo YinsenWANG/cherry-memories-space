@@ -1,5 +1,9 @@
 # Cherry-Studio-Memories
 
+## Downloads / 构建
+
+This repository is an independent Cherry Studio mirror with Space and Memories. Download macOS arm64 builds from [Releases](https://github.com/YinsenWANG/cherry-memories-space/releases). To build locally with Node 24 and the pinned pnpm: `pnpm install --frozen-lockfile && pnpm build:mac:arm64`.
+
 Cherry-Studio-Memories adds an editable **Space** to Cherry Studio. It combines pages, tables, a Memories table, an Agent Operating Guide and a Skills directory. The local version uses Cherry's bundled Electron runtime and npm dependencies; a separately hosted server uses the same API and Space interface.
 
 ```text
