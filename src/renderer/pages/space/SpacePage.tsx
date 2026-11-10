@@ -30,7 +30,7 @@ type Rows = { revision: string; rows: Row[] }
 
 export default function SpacePage() {
   const { t } = useTranslation()
-  const { mcpServers, mutate: reloadMcpServers } = useMcpServers()
+  const { mcpServers, refetch: reloadMcpServers } = useMcpServers()
   const server = mcpServers.find((item) => item.name === BuiltinMcpServerNames.sharedMemories)
   const token = Object.entries(server?.headers ?? {})
     .find(([key]) => key.toLowerCase() === 'authorization')?.[1]
