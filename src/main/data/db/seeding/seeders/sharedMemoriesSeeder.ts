@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 
 import { agentMcpServerTable } from '@data/db/schemas/assistantRelations'
 import { mcpServerTable } from '@data/db/schemas/mcpServer'
@@ -39,6 +39,8 @@ export class SharedMemoriesSeeder implements ISeeder {
       const existing = tx.select().from(mcpServerTable).where(eq(mcpServerTable.name, preset.name)).get()
 
       if (existing) {
+        // 已有记录：只在「同名但不是内置」时升级为内置（否则 SpaceService 会早退、后端不启动）。
+        // 用户自己把它停用或解绑的选择必须保留 —— 已有测试明确要求这一点，不能自动重新启用/绑定。
         if (existing.installSource !== 'builtin') {
           logger.warn(
             `Found a non-builtin MCP server named ${preset.name} (installSource=${existing.installSource}); upgrading it to builtin so the local Space backend can start`
@@ -57,20 +59,6 @@ export class SharedMemoriesSeeder implements ISeeder {
             })
             .where(eq(mcpServerTable.id, existing.id))
             .run()
-        }
-        if (!assistant) {
-          logger.warn('No builtin assistant found; shared-memories server exists but was not bound to an agent')
-          return
-        }
-        const bound = tx
-          .select()
-          .from(agentMcpServerTable)
-          .where(
-            and(eq(agentMcpServerTable.agentId, assistant.id), eq(agentMcpServerTable.mcpServerId, existing.id))
-          )
-          .get()
-        if (!bound) {
-          tx.insert(agentMcpServerTable).values({ agentId: assistant.id, mcpServerId: existing.id }).run()
         }
         return
       }
