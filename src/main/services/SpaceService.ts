@@ -19,7 +19,19 @@ export class SpaceService extends BaseService {
 
   protected async onReady(): Promise<void> {
     const server = mcpServerService.findByIdOrName(BuiltinMcpServerNames.sharedMemories)
-    if (!server || server.installSource !== 'builtin') return
+    if (!server) {
+      // 这条警告是「Space 页面白屏但毫无线索」的直接线索，别删
+      logger.warn('No MCP server named %s found; local Space backend will not start', BuiltinMcpServerNames.sharedMemories)
+      return
+    }
+    if (server.installSource !== 'builtin') {
+      logger.warn(
+        'MCP server %s exists but installSource=%s (expected builtin); local Space backend will not start',
+        BuiltinMcpServerNames.sharedMemories,
+        server.installSource
+      )
+      return
+    }
     const mode = Object.entries(server.headers ?? {}).find(([key]) => key.toLowerCase() === 'x-cherry-space-mode')?.[1]
     if (mode === 'remote' || (!mode && server.baseUrl && server.baseUrl !== legacyLocalUrl)) return
 
