@@ -30,13 +30,25 @@ type Rows = { revision: string; rows: Row[] }
 
 export default function SpacePage() {
   const { t } = useTranslation()
-  const { mcpServers } = useMcpServers()
+  const { mcpServers, mutate: reloadMcpServers } = useMcpServers()
   const server = mcpServers.find((item) => item.name === BuiltinMcpServerNames.sharedMemories)
   const token = Object.entries(server?.headers ?? {})
     .find(([key]) => key.toLowerCase() === 'authorization')?.[1]
     ?.replace(/^Bearer\s+/i, '')
   const baseUrl = server?.baseUrl?.replace(/\/mcp\/?$/, '').replace(/\/$/, '')
   const api = useMemo(() => (baseUrl && token ? new SpaceApi(baseUrl, token) : undefined), [baseUrl, token])
+  // 本地后端就绪后会把 Bearer token 与端口回写进 MCP 记录。页面如果只在挂载时读一次，
+  // 就会永久停在「连接中」（没有任何报错）。这里做有限重试，最多 30 秒。
+  useEffect(() => {
+    if (api) return
+    let tries = 0
+    const timer = setInterval(() => {
+      tries += 1
+      void reloadMcpServers?.()
+      if (tries >= 15) clearInterval(timer)
+    }, 2000)
+    return () => clearInterval(timer)
+  }, [api, reloadMcpServers])
   const [spaces, setSpaces] = useState<Space[]>([])
   const [space, setSpace] = useState<Space>()
   const [pages, setPages] = useState<PageItem[]>([])
