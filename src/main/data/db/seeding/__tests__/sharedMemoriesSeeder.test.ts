@@ -53,4 +53,32 @@ describe('SharedMemoriesSeeder', () => {
       dbh.db.select().from(agentMcpServerTable).where(eq(agentMcpServerTable.mcpServerId, server.id)).all()
     ).toEqual([])
   })
+
+  it('upgrades a same-name non-builtin server so the local backend can start', () => {
+    new SeedRunner(dbh.db).runAll([new CherryAssistantSeeder()])
+    dbh.db
+      .insert(mcpServerTable)
+      .values({
+        name: BuiltinMcpServerNames.sharedMemories,
+        type: 'streamableHttp',
+        baseUrl: 'http://127.0.0.1:16807/mcp',
+        installSource: 'manual',
+        isActive: true,
+        isTrusted: false,
+        shouldConfig: true
+      })
+      .run()
+
+    new SeedRunner(dbh.db).runAll([new CherryAssistantSeeder(), new SharedMemoriesSeeder()])
+
+    const server = dbh.db
+      .select()
+      .from(mcpServerTable)
+      .where(eq(mcpServerTable.name, BuiltinMcpServerNames.sharedMemories))
+      .get()!
+    // SpaceService 只认 installSource === 'builtin'，否则会早退、本地后端不会启动
+    expect(server.installSource).toBe('builtin')
+    expect(server.isTrusted).toBe(true)
+    expect(dbh.db.select().from(mcpServerTable).all()).toHaveLength(1)
+  })
 })
