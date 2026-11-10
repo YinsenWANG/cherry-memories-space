@@ -1,0 +1,23 @@
+{
+  "name": "cherry-memories-server",
+  "version": "0.1.0",
+  "description": "Shared Space and memory server for Cherry Studio",
+  "type": "module",
+  "license": "AGPL-3.0-only",
+  "engines": {
+    "node": ">=24.16.0"
+  },
+  "bin": {
+    "cherry-memories-server": "./src/cli.mjs"
+  },
+  "files": ["src", "README.md"],
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@eidos.space/eidos-file": "3.7.0",
+    "@modelcontextprotocol/sdk": "1.32.0",
+    "better-auth": "1.7.18",
+    "zod": "4.6.7"
+  }
+}
