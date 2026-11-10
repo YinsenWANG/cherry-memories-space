@@ -21,14 +21,14 @@ export class SpaceService extends BaseService {
     const server = mcpServerService.findByIdOrName(BuiltinMcpServerNames.sharedMemories)
     if (!server) {
       // 这条警告是「Space 页面白屏但毫无线索」的直接线索，别删
-      logger.warn('No MCP server named %s found; local Space backend will not start', BuiltinMcpServerNames.sharedMemories)
+      logger.warn(
+        `No MCP server named ${BuiltinMcpServerNames.sharedMemories} found; local Space backend will not start`
+      )
       return
     }
     if (server.installSource !== 'builtin') {
       logger.warn(
-        'MCP server %s exists but installSource=%s (expected builtin); local Space backend will not start',
-        BuiltinMcpServerNames.sharedMemories,
-        server.installSource
+        `MCP server ${BuiltinMcpServerNames.sharedMemories} exists but installSource=${server.installSource} (expected builtin); local Space backend will not start`
       )
       return
     }
