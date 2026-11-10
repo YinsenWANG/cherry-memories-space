@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-15 # macos-14 已于 2026-11-02 被 GitHub 停用（actions/runner-images#13518）
     env:
       CSC_IDENTITY_AUTO_DISCOVERY: "false"
     steps:
