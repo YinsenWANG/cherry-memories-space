@@ -24,6 +24,14 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
+      - name: Select newest Xcode 26 (Swift 6.2)
+        run: |
+          XC=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$XC" ]; then echo "no Xcode 26 on this runner"; ls /Applications | grep -i xcode; exit 1; fi
+          echo "Selected $XC"
+          sudo xcode-select -s "$XC/Contents/Developer"
+          xcodebuild -version
+          swift --version
       - run: pnpm install --frozen-lockfile
       - run: pnpm build:mac:arm64
       - name: Verify DMG exists
